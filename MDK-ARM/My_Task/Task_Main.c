@@ -14,9 +14,12 @@
 #include "global_define.h"
 #include "global_variable.h"
 #include "app_remote.h"
+#include "bsp_gy53l1.h"
+#include "usart.h"
 
 uint8_t Omron[3] = {1,1,1};  //底盘俩欧姆龙，多一个接口当备用
-
+bsp_GY53L1_Object Laser_Ranging1;
+bsp_GY53L1_Object Laser_Ranging2;
 
 void MainTask(void const * argument)
 { 
@@ -32,6 +35,10 @@ void MainTask(void const * argument)
 	TFmini_Init();  //北醒传感器
 	bsp_dbus_Init();  //DBUS
 	bsp_can_Init();  //CAN初始化
+//	bsp_GY53L1_Object_Init(&Laser_Ranging1,&huart2);` //激光测距初始化
+	//bsp_GY53L1_Object_Init(&Laser_Ranging2,&huart6);` //激光测距初始化
+	bsp_GY53L1_Object_Init(&Laser_Ranging1,&huart2);
+	bsp_GY53L1_Object_Init(&Laser_Ranging2,&huart6);
 	manager::CANSelect(&hcan1,&hcan2);  //选择CAN1和CAN2
   for(;;)
 	{

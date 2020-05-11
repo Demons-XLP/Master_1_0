@@ -16,6 +16,8 @@
 #include "global_variable.h"
 #include "bsp_can.hpp"
 #include "bsp_adc_deal.h"
+#include "bsp_gy53l1.h"
+#include "task_main.h"
 
 
 /*******************************底盘电机相关变量*****************************************************/
@@ -35,6 +37,7 @@ chassis Chassis_Engineer(1,0x201,&DJI_Motor_3508,&PID_Chassis_Speed,NULL);  //创
 #define RESCUE2_AC_OFF      		HAL_GPIO_WritePin(Air_Cylinder1_GPIO_Port,Air_Cylinder1_Pin,GPIO_PIN_RESET);  //救援
 
 int16_t Order_To_Slaver[4],Order_To_Cloud[4];
+
 //////*******************************非模式控制函数但放在此方便管理的函数*******************************************************************************/
 /*
 * @brief  主控给副控发送信息

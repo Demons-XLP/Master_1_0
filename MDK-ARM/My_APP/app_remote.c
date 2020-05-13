@@ -138,50 +138,50 @@ static void Chassis_Independent_Mode(uint8_t type)
 
 /** 
 * @brief 底盘对位
-* @detail  
+* @detail  运用夏普传感器
 */
 #define LEFT_SHARP bsp_ADC1_Sharp_Distance[0]   //左后轮传感器
 #define RIGHT_SHARP bsp_ADC1_Sharp_Distance[1]   //左前轮传感器
-#define SHARP_BETWEEN 100  //车子上两个夏普传感器的距离单位为cm
-#define AUTO_PARA_TARGET_DISTANCE 15  //目标距离
-#define THRESHOLD_Z	 2.0f		//Z轴旋转阈值
-#define THRESHOLD_Y  2.5f   //Y轴旋转阈值
+#define AUTO_PARA_TARGET_DISTANCE_SHARP 15  //目标距离
+#define THRESHOLD_Z_SHARP	 0.5f		//Z轴旋转阈值
+#define THRESHOLD_Y_SHARP  0.1f   //Y轴旋转阈值
 
-pid Auto_Para_Z_PID(0,0,0,0,0,0);		//自动对位Z轴PID
+pid Auto_Para_Z_PID_SHARP(300,0.1,0,1000,5000,1,0);		//自动对位Z轴PID
 //	pid(float P, float I, float D, float IMax, float PIDMax, uint16_t I_Time=1, uint16_t D_Time=1,uint16_t I_Limited=9999);//传统pid构造函数
-pid Auto_Para_Y_PID(0,0,0,0,0,0);		//自动对位Y轴PID
-
-float Speed_Z;  //Z轴旋转速度
-float Speed_Y;	 //Y轴旋转速度
-static uint8_t Flag_Auto_Para = 0;		//自动对位flag，LEFT_SHARP小于50开启
-static void Chassis_Auto_Para_Mode(uint8_t type)
+pid Auto_Para_Y_PID_SHARP(-210,-0.3,-6000,500,5000,1,3);		//自动对位Y轴PID
+float Speed_Z_Sharp;  //Z轴旋转速度
+float Speed_Y_Sharp;	 //Y轴旋转速度
+static uint8_t Flag_Auto_Para_Sharp = 0;		//自动对位flag，LEFT_LASER小于50开启
+static void Chassis_Auto_Para_Sharp_Mode(uint8_t type)
 {
 	switch(type)
 	{
 		case STARTING:
-					  if(LEFT_SHARP > 50.f || RIGHT_SHARP >  50.f) Flag_Auto_Para = 0;	//不开启对位
-						if(LEFT_SHARP < 50.f && RIGHT_SHARP < 50.f) Flag_Auto_Para = 1;	//开启对位
+					  if(LEFT_SHARP > 28.f || RIGHT_SHARP >  28.f) Flag_Auto_Para_Sharp = 0;	//不开启对位
+						if(LEFT_SHARP < 28.f && RIGHT_SHARP < 28.f) Flag_Auto_Para_Sharp = 1;	//开启对位
 			break;
 		case RUNNING: 
-			    if(Flag_Auto_Para == 1)
+			    if(Flag_Auto_Para_Sharp == 1)
 					{
-						if(ABS(LEFT_SHARP - RIGHT_SHARP) > THRESHOLD_Z)
+						if(ABS(LEFT_SHARP - RIGHT_SHARP) > THRESHOLD_Z_SHARP)
 						{
-							Speed_Z = Auto_Para_Z_PID.pid_run(LEFT_SHARP - RIGHT_SHARP);
+							Speed_Z_Sharp = Auto_Para_Z_PID_SHARP.pid_run(LEFT_SHARP - RIGHT_SHARP);
 						}
-						else Speed_Z = 0;
-						if(ABS(LEFT_SHARP - AUTO_PARA_TARGET_DISTANCE) > AUTO_PARA_TARGET_DISTANCE)
+						else Speed_Z_Sharp = 0;
+						if(ABS(LEFT_SHARP - AUTO_PARA_TARGET_DISTANCE_SHARP) > THRESHOLD_Y_SHARP)
 						{
-							Speed_Y = Auto_Para_Y_PID.pid_run(LEFT_SHARP - AUTO_PARA_TARGET_DISTANCE);
+							Speed_Y_Sharp = Auto_Para_Y_PID_SHARP.pid_run(LEFT_SHARP - AUTO_PARA_TARGET_DISTANCE_SHARP);
 						}
-						else Speed_Y = 0;
+						else Speed_Y_Sharp = 0;
 				  }
 					else 
 					{
-						Speed_Z = 0;;
-						Speed_Y = 0;
+						Speed_Z_Sharp = 0;;
+						Speed_Y_Sharp = 0;
 					}
-					Chassis_Engineer.Run(0,Speed_Y,Speed_Z);
+					if(LEFT_SHARP > 28.f || RIGHT_SHARP >  28.f) Flag_Auto_Para_Sharp = 0;	//不开启对位
+					if(LEFT_SHARP < 28.f && RIGHT_SHARP < 28.f) Flag_Auto_Para_Sharp = 1;	//开启对位
+					Chassis_Engineer.Run(0,Speed_Y_Sharp,Speed_Z_Sharp);
 			break;
 		case ENDING:
 			break;
@@ -191,9 +191,68 @@ static void Chassis_Auto_Para_Mode(uint8_t type)
 #undef LEFT_SHARP 
 #undef RIGHT_SHARP 
 #undef SHARP_BETWEEN 
-#undef AUTO_PARA_TARGET_DISTANCE 
-#undef THRESHOLD_Z	 
-#undef THRESHOLD_Y  
+#undef AUTO_PARA_TARGET_DISTANCE_SHARP 
+#undef THRESHOLD_Z_SHARP	 
+#undef THRESHOLD_Y_LASER  
+
+/** 
+* @brief 底盘对位
+* @detail  运用激光测距
+*/
+#define LEFT_LASER Laser_Ranging1.data.distance  //左后轮传感器
+#define RIGHT_LASER Laser_Ranging2.data.distance   //左前轮传感器
+#define AUTO_PARA_TARGET_DISTANCE_LASER 20//目标距离
+#define LASER_EFFECTIVE_DISTANCE	60  //传感器有效距离
+#define THRESHOLD_Z_LASER	 	2//Z轴旋转阈值
+#define THRESHOLD_Y_LASER  1   //Y轴旋转阈值
+
+pid Auto_Para_Z_PID_LASER(0,0,0,0,0,0,9999);		//自动对位Z轴PID
+//	pid(float P, float I, float D, float IMax, float PIDMax, uint16_t I_Time=1, uint16_t D_Time=1,uint16_t I_Limited=9999);//传统pid构造函数
+pid Auto_Para_Y_PID_LASER(110,0.3,0,300,5000,3,0,9999);		//自动对位Y轴PID
+
+float Speed_Z_Laser;  //Z轴旋转速度
+float Speed_Y_Laser;	 //Y轴旋转速度
+uint8_t Flag_Auto_Para_Laser = 0;		//自动对位flag，LEFT_LASER小于50开启
+static void Chassis_Auto_Para_Laser_Mode(uint8_t type)
+{
+	switch(type)
+	{
+		case STARTING:
+					  if(LEFT_LASER > LASER_EFFECTIVE_DISTANCE || RIGHT_LASER >  LASER_EFFECTIVE_DISTANCE) Flag_Auto_Para_Laser = 0;	//不开启对位
+						if(LEFT_LASER < LASER_EFFECTIVE_DISTANCE && RIGHT_LASER < LASER_EFFECTIVE_DISTANCE) Flag_Auto_Para_Laser = 1;	//开启对位
+			break;
+		case RUNNING: 
+			    if(Flag_Auto_Para_Laser == 1)
+					{
+						if(ABS(LEFT_LASER - RIGHT_LASER) > THRESHOLD_Z_LASER)
+						{
+							Speed_Z_Laser = Auto_Para_Z_PID_LASER.pid_run(LEFT_LASER - RIGHT_LASER);
+						}
+						else Speed_Z_Laser = 0;
+						if((LEFT_LASER - AUTO_PARA_TARGET_DISTANCE_LASER) > THRESHOLD_Y_LASER || (LEFT_LASER - AUTO_PARA_TARGET_DISTANCE_LASER) < 0)
+						{
+							Speed_Y_Laser = Auto_Para_Y_PID_LASER.pid_run(LEFT_LASER - AUTO_PARA_TARGET_DISTANCE_LASER);
+						}
+						else Speed_Y_Laser = 0;
+				  }
+					else 
+					{
+						Speed_Z_Laser = 0;;
+						Speed_Y_Laser = 0;
+					}
+					Chassis_Engineer.Run(0,Speed_Y_Laser,Speed_Z_Laser);
+			break;
+		case ENDING:
+			break;
+  }
+}
+
+#undef LEFT_LASER 
+#undef RIGHT_LASER 
+#undef AUTO_PARA_TARGET_DISTANCE_LASER 
+#undef THRESHOLD_Z_LASER	 
+#undef THRESHOLD_Y_LASER  
+#undef LASER_EFFECTIVE_DISTANCE
 ///** 
 //* @brief 底盘跟随模式
 //* @detail 运用云台机械角进行底盘跟随
@@ -268,7 +327,7 @@ static void Remote_Distribute(uint8_t mode,uint8_t type)
 					Lock_Mode(type);
 			break;
 		case 11:  //二次取弹抱死
-					Lock_Mode(type);
+					Chassis_Auto_Para_Laser_Mode(type);
 			break;
 		case 33:  //底盘独立
 					Chassis_Independent_Mode(type);
@@ -277,7 +336,7 @@ static void Remote_Distribute(uint8_t mode,uint8_t type)
 					Safe_Mode(type);
 			break;
 		case 23:	//自动对位
-					Chassis_Auto_Para_Mode(type);
+					Chassis_Auto_Para_Sharp_Mode(type);
 			break;
 		default :		//安全
 					Safe_Mode(type);

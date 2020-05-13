@@ -120,8 +120,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 			bsp_Final_ADC1_Volage[i] =  (uint16_t) (ADC1_ch_sum[i] - ADC1_ch_offset[i]);    
 		}
 		for(uint8_t i=0;i<2;i++){
-			if(bsp_Final_ADC1_Volage[i] < 750)  bsp_Final_ADC1_Volage[i] = 750;  // 对应60cm左右
-			bsp_ADC1_Sharp_Distance[i] = 284486*pow(bsp_Final_ADC1_Volage[i],-1.275);
+			if(bsp_Final_ADC1_Volage[i] < 1275)  bsp_Final_ADC1_Volage[i] = 1275;  // 对应30cm左右
+			bsp_ADC1_Sharp_Distance[i] = -1.563e-9*pow((float)bsp_Final_ADC1_Volage[i],3) 
+																   + 1.544e-5*pow((float)bsp_Final_ADC1_Volage[i],2) 
+																	 - 0.05473*bsp_Final_ADC1_Volage[i] 
+																	 + 77.83;
 		}
 
   }

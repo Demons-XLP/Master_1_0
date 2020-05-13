@@ -37,7 +37,7 @@ void MainTask(void const * argument)
 	bsp_can_Init();  //CAN初始化
 //	bsp_GY53L1_Object_Init(&Laser_Ranging1,&huart2);` //激光测距初始化
 	//bsp_GY53L1_Object_Init(&Laser_Ranging2,&huart6);` //激光测距初始化
-	bsp_GY53L1_Object_Init(&Laser_Ranging1,&huart2);
+	bsp_GY53L1_Object_Init(&Laser_Ranging1,&huart1);
 	bsp_GY53L1_Object_Init(&Laser_Ranging2,&huart6);
 	manager::CANSelect(&hcan1,&hcan2);  //选择CAN1和CAN2
   for(;;)
